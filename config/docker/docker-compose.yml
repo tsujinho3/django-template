@@ -1,0 +1,49 @@
+version: "3.7"
+services:
+    app:
+        build:
+            context: ./${APP_NAME}
+            dockerfile: ./base.dockerfile
+            args:
+                - USERNAME=${CONTAINER_USERNAME}
+                - UID=${CONTAINER_UID}
+                - GID=${CONTAINER_GID}
+        image: ${COMPOSE_PROJECT_NAME}_${APP_NAME}
+        container_name: ${COMPOSE_PROJECT_NAME}_${APP_NAME}
+        hostname: ${APP_NAME}
+        networks:
+            - default
+        ports:
+            - "8000:8000"
+        working_dir: "/home/rootless/src"
+        tty: true
+        volumes:
+            - ../../src:/home/rootless/src
+        env_file:
+            - ./dev.env
+            # - ./prod.env
+        depends_on:
+            - db
+
+    db:
+        build:
+            context: ./${DB_NAME}
+            dockerfile: ./base.dockerfile
+        image: ${COMPOSE_PROJECT_NAME}_${DB_NAME}
+        container_name: ${COMPOSE_PROJECT_NAME}_${DB_NAME}
+        hostname: ${DB_NAME}
+        networks:
+            - default
+        volumes:
+            - db-data:/var/lib/postgresql/data/
+        env_file:
+            - ./dev.env
+            # - ./prod.env
+
+volumes:
+    db-data:
+
+networks:
+    default:
+        name: ${COMPOSE_PROJECT_NAME}
+        driver: bridge
