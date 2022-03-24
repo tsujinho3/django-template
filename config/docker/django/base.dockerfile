@@ -1,18 +1,40 @@
-FROM python:3.10-slim
+# *** production builder ***
+FROM python:3.10-slim as builder_prod
 
-ENV DOCKER true
+ARG USERNAME
+ARG UID
+ARG GID
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
 USER root
+WORKDIR /root
 
-
-# install apps for production
+# install apps
 RUN apt update \
     && apt install -y \
     netcat
 
+#  install python libraries
+COPY ./requirements.txt ./
+RUN pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+# create rootless user
+RUN useradd -u ${UID} -o -m ${USERNAME}
+RUN groupmod -g ${GID} -o ${USERNAME}
+
+
+# *** development builder ***
+FROM builder_prod as builder_dev
+
+ARG USERNAME
+
+ENV DOCKER true
+
+USER root
+WORKDIR /home/${USERNAME}
 
 # install apps for development
 RUN apt install -y \
@@ -23,34 +45,20 @@ RUN apt install -y \
 
 ENV SHELL /bin/zsh
 
-
-# install python libraries
-WORKDIR /root
-COPY ./requirements.txt ./
-RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
-
-
-# log in as a rootless user
-ARG USERNAME
-ARG UID
-ARG GID
-
-RUN useradd -u ${UID} -o -m ${USERNAME}
-RUN groupmod -g ${GID} -o ${USERNAME}
-
-USER ${USERNAME}
-
-WORKDIR /home/${USERNAME}
-
 COPY --chown=${USERNAME} ./base.zshenv ./.zshenv
 COPY --chown=${USERNAME} ./base.zshrc ./.zshrc
 
 
+# *** final output ***
+FROM builder_dev
+
+ARG USERNAME
+
+USER ${USERNAME}
+WORKDIR /home/${USERNAME}
+
 # set entry point
 COPY --chown=${USERNAME} ./entry_point.sh ./
 RUN chmod u+x entry_point.sh
-
-
 
 ENTRYPOINT ["../entry_point.sh", "/bin/zsh"]
