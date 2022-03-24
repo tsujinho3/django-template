@@ -51,4 +51,6 @@ COPY --chown=${USERNAME} ./base.zshrc ./.zshrc
 COPY --chown=${USERNAME} ./entry_point.sh ./
 RUN chmod u+x entry_point.sh
 
+
+
 ENTRYPOINT ["../entry_point.sh", "/bin/zsh"]

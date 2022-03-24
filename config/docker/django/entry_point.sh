@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ ${DATABASE} = "postgres" ]
+if [ ${SQL_TYPE} = "postgres" ]
 then
     echo "Waiting to run postgreSQL..."
 
@@ -10,6 +10,7 @@ then
     done
 
     echo "PostgreSQL is now running..."
+
 fi
 
 exec $@
