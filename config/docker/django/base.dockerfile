@@ -13,7 +13,7 @@ WORKDIR /root
 
 # install apps
 RUN apt update \
-    && apt install -y \
+    && apt install -y --no-install-recommends\
     netcat
 
 #  install python libraries
@@ -22,8 +22,8 @@ RUN pip install --upgrade pip \
     && pip install -r requirements.txt
 
 # create rootless user
-RUN useradd -u ${UID} -o -m ${USERNAME}
-RUN groupmod -g ${GID} -o ${USERNAME}
+RUN useradd -u ${UID} -o -m ${USERNAME} \
+    && groupmod -g ${GID} -o ${USERNAME}
 
 
 # *** development builder ***
@@ -34,7 +34,6 @@ ARG USERNAME
 ENV DOCKER true
 
 USER root
-WORKDIR /home/${USERNAME}
 
 # install apps for development
 RUN apt install -y \
@@ -44,6 +43,9 @@ RUN apt install -y \
     bat
 
 ENV SHELL /bin/zsh
+
+USER ${USERNAME}
+WORKDIR /home/${USERNAME}
 
 COPY --chown=${USERNAME} ./base.zshenv ./.zshenv
 COPY --chown=${USERNAME} ./base.zshrc ./.zshrc

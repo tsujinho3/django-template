@@ -15,10 +15,10 @@ services:
             - default
         ports:
             - "8000:8000"
-        working_dir: "/home/rootless/src"
+        working_dir: "/home/${CONTAINER_USERNAME}/src"
         tty: true
         volumes:
-            - ../../src:/home/rootless/src
+            - ../../src:/home/${CONTAINER_USERNAME}/src
         env_file:
             - ./dev.env
             # - ./prod.env
